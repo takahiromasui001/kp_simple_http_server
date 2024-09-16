@@ -1,15 +1,13 @@
 module Kp
-  class HttpResponseParser
+  class HttpResponse
+    attr_reader :formatted_response
+
     def initialize(code:, body: '')
-      @response =
+      @formatted_response =
         "HTTP/1.1 #{code}\r\n" +
         "Content-Length: #{body.size}\r\n" +
         "\r\n" +
         "#{body}\r\n"
-    end
-
-    def send(client)
-      client.write(@response)
     end
   end  
 end
