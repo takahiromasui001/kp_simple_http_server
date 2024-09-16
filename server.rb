@@ -1,35 +1,46 @@
 require 'socket'
+require 'debug'
+require_relative 'http_request_parser'
+require_relative 'http_response_parser'
 
+SERVER_ROOT_PATH = File.expand_path('src', __dir__)
 server = TCPServer.new('localhost', 9292)
 
-def parse(request_string)
-  method, path, version = request_string.lines[0].split
-
-  {
-    method:,
-    path:,
-    headers: parse_headers(request_string)
-  }
-end
-
-def parse_headers(request)
-  headers = {}
-  request.lines[1..-1].each do |line|
-    return headers if line == "\r\n"
-    header, value = line.split
-    header = normalize(header)
-    headers[header] = value
+def prepare(parsed_request)
+  path = parsed_request[:path]
+  if path == '/'
+    respond_with(SERVER_ROOT_PATH + '/index.html')
+  else
+    respond_with(SERVER_ROOT_PATH + path)
   end
 end
 
-def normalize(header)
-  header.gsub(':', "").downcase.to_sym
+def respond_with(path)
+  if File.exist?(path)
+    ok_response(File.binread(path))
+  else
+    not_found_response
+  end
+end
+
+def ok_response(body)
+  Kp::HttpResponseParser.new(code: 200, body:)
+end
+
+def not_found_response
+  Kp::HttpResponseParser.new(code: 404)
 end
 
 loop do
   socket = server.accept
   request = socket.readpartial(2048)
+  parsed_request = Kp::HttpRequestParser.new(request).parse
 
-  STDERR.puts parse(request)
+  STDERR.puts parsed_request
+
+  response = prepare(parsed_request)
+  response.send(socket)
+
+  socket.close
 end
 
