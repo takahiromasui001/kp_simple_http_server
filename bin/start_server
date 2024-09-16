@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require_relative '../server'
+Kp::HttpServer.new(9292).start

@@ -52,5 +52,3 @@ class Kp::HttpServer
     Kp::HttpResponseParser.new(code: 404)
   end
 end
-
-Kp::HttpServer.new(9292).start
